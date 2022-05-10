@@ -90,6 +90,26 @@ def primes_load_upto(N):
 	prime = np.loadtxt('../files/primes/primes1.txt')
 	return prime[prime<N]
 
+def primes_tree(N):
+	primes_list_max = [  15485863,  32452843,  49979687,  67867967,  86028121, 
+						104395301, 122949823, 141650939, 160481183, 179424673,
+						198491317, 217645177, 236887691, 256203161, 275604541, 
+						295075147, 314606869, 334214459, 353868013, 373587883,
+						393342739, 413158511, 433024223, 452930459, 472882027,
+						492876847, 512927357, 533000389, 553105243, 573259391,
+						593441843, 613651349, 633910099, 654188383, 674506081,
+						694847533, 715225739, 735632791, 756065159, 776531401,
+						797003413, 817504243, 838041641, 858599503, 879190747,
+						899809343, 920419813, 941083981, 961748927, 982451653, ]
+						
+	prime_tree = {}
+	for i, n in enumerate(primes_list_max):
+		if n<N:	
+			print(f'Loading {n}/{N}')
+			prime_tree[n] = np.loadtxt(f'../files/primes/primes{i+1}.txt')
+
+	return prime_tree
+
 @timer
 def factorize(N):
 	primes_calculate( int(N**0.5) )
@@ -122,7 +142,23 @@ def factorize_big_number(N):
 	primes_list = prime_list[:index]
 	return primes_list
 
-def is_palindromic(self, N): return N == N[::-1]
+
+def is_prime(N):
+	prime_list = np.zeros(100, dtype=np.int64) 
+	index = 0
+
+	n = 2
+	while N > 1:
+		if N%n == 0:	
+			N /= n
+			prime_list[index] = n
+			index += 1
+			return 0
+		else: 			n+=1
+
+	return 1
+
+def is_palindromic(N): return N == N[::-1]
 
 @timer
 def pascal_triangle(N):
@@ -253,3 +289,9 @@ def is_pandigitalN(N):
 def is_pandigital09(N):
 	vec = np.array([str(N).count(str(n)) for n in range(0,10)])==1
 	return vec.all()
+
+def is_permutation(N1, N2):
+	N1 = [n for n in str(N1)]
+	N2 = [n for n in str(N2)]
+	return all(N1.count(char) == N2.count(char) for char in set(N1) | set(N2))
+
