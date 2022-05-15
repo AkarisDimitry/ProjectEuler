@@ -1,8 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import time 
 from functools import reduce
-import itertools
+import itertools, decimal, time, math
 
 def timer(func):
 	def wrapper(*args, **kwargs):
@@ -277,6 +276,36 @@ def getPeriod( n) :
         count += 1
      
     return count
+
+def continued_fraction(n):  
+	mn, dn = 0.0, 1.0
+	a0 = int(math.sqrt(n))
+	an = int(math.sqrt(n))
+	cf_list = [math.sqrt(n)-a0]
+	period = 0
+	if a0 != math.sqrt(n):
+		while an != 2*a0:
+			mn = dn*an - mn
+			dn = (n - mn**2)/dn
+			an = int((a0 + mn)/dn)
+			cf_list.append(an)
+			period += 1
+
+	return cf_list
+
+def continued_fraction_period_prec(n):
+	mn, dn = 0.0, 1.0
+	a0 = int(math.sqrt(n))
+	an = int(math.sqrt(n))
+	period = 0
+	if a0 != math.sqrt(n):
+		while an != 2*a0:
+			mn = dn*an - mn
+			dn = (n - mn**2)/dn
+			an = int((a0 + mn)/dn)
+			period += 1
+
+	return period
 
 def is_pandigital(N):
 	vec = np.array([str(N).count(str(n)) for n in range(1,10)])==1
