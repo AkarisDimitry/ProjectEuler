@@ -277,14 +277,14 @@ def getPeriod( n) :
      
     return count
 
-def continued_fraction(n):  
+def continued_fraction(n, max_length=100):  
 	mn, dn = 0.0, 1.0
 	a0 = int(math.sqrt(n))
 	an = int(math.sqrt(n))
-	cf_list = [math.sqrt(n)-a0]
+	cf_list = [a0]
 	period = 0
 	if a0 != math.sqrt(n):
-		while an != 2*a0:
+		while an != 2*a0 and len(cf_list)<max_length:
 			mn = dn*an - mn
 			dn = (n - mn**2)/dn
 			an = int((a0 + mn)/dn)
@@ -306,6 +306,28 @@ def continued_fraction_period_prec(n):
 			period += 1
 
 	return period
+
+def series2fraction(series):
+	numerator = 1
+	denominator = series[-1]
+	for e in series[::-1][1:]:
+		numerator += e*denominator
+		denominator, numerator = numerator, denominator
+		print(f'{numerator}/{denominator}')
+
+	return numerator, denominator
+
+def is_square_prec(apositiveint):
+	x = apositiveint // 2
+	seen = set([x])
+	while x * x != apositiveint:
+		x = (x + (apositiveint // x)) // 2
+		if x in seen: return False
+		seen.add(x)
+	return True
+
+def is_square(i: int) -> bool:
+    return i == math.isqrt(i) ** 2
 
 def is_pandigital(N):
 	vec = np.array([str(N).count(str(n)) for n in range(1,10)])==1
