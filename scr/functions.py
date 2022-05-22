@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from functools import reduce
 import itertools, decimal, time, math
+from math import gcd
+from numba import njit, jit
 
 def timer(func):
 	def wrapper(*args, **kwargs):
@@ -26,6 +28,36 @@ def Fibonacci(N, init=[1, 1], Fmax=None, save=True):
 
 	if save: Fibonacci = F[:n-1]
 	return F[:n-1]
+
+def phi(n):
+	amount = 0        
+	for k in range(1, n + 1):
+		if gcd(n, k) == 1:
+			amount += 1
+
+	return amount
+
+def phi_2primes(p1, p2, n):
+	return n * (1-1/p1) * (1-1/p2)
+
+@timer
+@jit('int64[:](int64[:])', nopython=True) # , nopython=True, 
+def phi_list_jit(N):
+	d = np.zeros_like(N, dtype=np.int64)
+	for i, n in enumerate(N):
+		for k in range(1, n + 1):
+			if np.gcd(n, k) == 1:
+				d[i] += 1
+	return d
+
+#@timer
+@jit('int64(int64)', nopython=True) # , nopython=True, 
+def phi_jit(N):
+	d = 0
+	for k in range(1, N + 1):
+		if gcd(N, k) == 1:
+			d += 1
+	return d
 
 @timer
 def primes_calculate(N):
@@ -180,6 +212,17 @@ def divisors_sum(N):
 
 	return divisors[n]
 
+def divisorGenerator(n):
+    large_divisors = []
+    for i in range(1, int(math.sqrt(n) + 1)):
+        if n % i == 0:
+            yield i
+            if i*i != n:
+                large_divisors.append(n / i)
+    for divisor in reversed(large_divisors):
+        yield divisor
+
+
 def abundant_numbers(N):
 	divisors = np.zeros(N, dtype=np.int64)
 	for n in range(N):
@@ -317,6 +360,45 @@ def series2fraction(series):
 
 	return numerator, denominator
 
+def reducefract(n, d):
+    '''Reduces fractions. n is the numerator and d the denominator.'''
+    def gcd(n, d):
+        while d != 0:
+            t = d
+            d = n%d
+            n = t
+        return n
+    assert d!=0, "integer division by zero"
+    assert isinstance(d, int), "must be int"
+    assert isinstance(n, int), "must be int"
+    greatest=gcd(n,d)
+    n/=greatest
+    d/=greatest
+    return n, d
+
+@jit('int64(int64)', nopython=True) # , nopython=True, 
+def proper_fractions(n):
+  distinct_prime_factors = set()   # use set to avoid duplicates
+  totient_function = n
+  if n == 1:
+    totient_function = 0
+  else:
+    i = 2
+    while i*i <= n:
+      if n % i == 0:
+        distinct_prime_factors.add(i)
+        n = n/i
+      else:
+        i += 1
+    if n > 1:
+      distinct_prime_factors.add(n)   # picks up prime factors > sqrt(n)
+    if len(distinct_prime_factors) == 0:   # empty set means denominator is prime
+      totient_function = n - 1
+    else:
+      for p in distinct_prime_factors:
+        totient_function = (totient_function*(p - 1))/p
+  return totient_function
+
 def is_square_prec(apositiveint):
 	x = apositiveint // 2
 	seen = set([x])
@@ -345,4 +427,5 @@ def is_permutation(N1, N2):
 	N1 = [n for n in str(N1)]
 	N2 = [n for n in str(N2)]
 	return all(N1.count(char) == N2.count(char) for char in set(N1) | set(N2))
+
 
