@@ -59,6 +59,9 @@ def phi_jit(N):
 			d += 1
 	return d
 
+def is_coprime(x, y):
+    return gcd(x, y) == 1
+    
 @timer
 def primes_calculate(N):
 	prime_list = np.zeros(N, dtype=np.int64) 
@@ -117,12 +120,8 @@ def primes_lower_N(N):
 	primes_list = prime_list[:p[0]-1]
 	return primes_list
 
-def primes_load_upto(N):
-	prime = np.loadtxt('../files/primes/primes1.txt')
-	return prime[prime<N]
-
-def primes_tree(N):
-	primes_list_max = [  15485863,  32452843,  49979687,  67867967,  86028121, 
+def get_primes_list_max():
+	return 			   [ 15485863,  32452843,  49979687,  67867967,  86028121, 
 						104395301, 122949823, 141650939, 160481183, 179424673,
 						198491317, 217645177, 236887691, 256203161, 275604541, 
 						295075147, 314606869, 334214459, 353868013, 373587883,
@@ -132,14 +131,25 @@ def primes_tree(N):
 						694847533, 715225739, 735632791, 756065159, 776531401,
 						797003413, 817504243, 838041641, 858599503, 879190747,
 						899809343, 920419813, 941083981, 961748927, 982451653, ]
-						
+
+def primes_tree(N):
 	prime_tree = {}
-	for i, n in enumerate(primes_list_max):
-		if n<N:	
-			print(f'Loading {n}/{N}')
-			prime_tree[n] = np.loadtxt(f'../files/primes/primes{i+1}.txt')
+	for i, n in enumerate( get_primes_list_max() ):
+		print(f'Loading {n}/{N}')
+		prime_tree[n] = np.loadtxt(f'../files/primes/primes{i+1}.txt')
+		if N<n:	break
 
 	return prime_tree
+
+def primes_list(N): return primes_load_upto(N)
+
+def primes_load_upto(N):
+	for i, n in enumerate( get_primes_list_max() ):
+		print(f'Loading {n}/{N}')
+		prime_list = np.loadtxt(f'../files/primes/primes{i+1}.txt') if i == 0 else np.concatenate( (prime_list, np.loadtxt(f'../files/primes/primes{i+1}.txt')), axis=0 )
+		if N<n:	break
+
+	return prime_list[prime_list<=N]
 
 @timer
 def factorize(N):
@@ -398,6 +408,27 @@ def proper_fractions(n):
       for p in distinct_prime_factors:
         totient_function = (totient_function*(p - 1))/p
   return totient_function
+
+@jit('uint32(uint32, uint32)', nopython=True, fastmath=True, parallel=True )#, parallel=True) # fastmath=True
+def numberofways(n, m) :
+	dp = np.zeros((n + 2, n + 2), dtype=np.uint32) 
+	dp[0][n + 1] = 1
+	# Filling the table. k is for numbers
+	# greater than or equal that are allowed.
+	for k in range(n, m - 1, -1) :
+		# i is for sum
+		for i in range(n + 1) :
+			# initializing dp[i][k] to number
+			# ways to get sum using numbers
+			# greater than or equal k+1
+			dp[i][k] = dp[i][k + 1]
+ 
+ 			# if i > k
+			if (i - k >= 0) :
+				dp[i][k] = (dp[i][k] + dp[i - k][k])
+	
+	return dp[n][m]
+
 
 def is_square_prec(apositiveint):
 	x = apositiveint // 2
