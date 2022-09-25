@@ -183,6 +183,41 @@ def factorize_big_number(N):
 	primes_list = prime_list[:index]
 	return primes_list
 
+@jit('int64[:](int64)', nopython=True) # , nopython=True, 
+def factorize_big_number_cuda(N):
+	prime_list = np.zeros(100, dtype=np.int64) 
+	index = 0
+
+	n = 2
+	while N > 1:
+		if N%n == 0:	
+			N /= n
+			prime_list[index] = n
+			index += 1
+		else: 			n+=1
+
+	primes_list = prime_list[:index]
+	return primes_list
+
+
+@jit('int64[:,:](int64[:])', nopython=True) # , nopython=True, 
+def factorize_big_list_cuda(N):
+	# upto 2**30 = 1073741824
+	prime_list = np.zeros((N.shape[0], 30), dtype=np.int64) 
+	
+	for i, M in enumerate(N):
+		index = 0
+		n = 2
+		while M > 1:
+			if M%n == 0:	
+				M /= n
+				prime_list[i, index] = n
+				index += 1
+			else: 			
+				n+=1
+
+	return prime_list
+
 
 def is_prime(N):
 	prime_list = np.zeros(100, dtype=np.int64) 
@@ -429,6 +464,44 @@ def numberofways(n, m) :
 	
 	return dp[n][m]
 
+
+def squareRoot(number, precision):
+ 
+    start = 0
+    end, ans = number, 1
+ 
+    # For computing integral part
+    # of square root of number
+    while (start <= end):
+        mid = int((start + end) / 2)
+ 
+        if (mid * mid == number):
+            ans = mid
+            break
+ 
+        # incrementing start if integral
+        # part lies on right side of the mid
+        if (mid * mid < number):
+            start = mid + 1
+            ans = mid
+ 
+        # decrementing end if integral part
+        # lies on the left side of the mid
+        else:
+            end = mid - 1
+ 
+    # For computing the fractional part
+    # of square root upto given precision
+    increment = 0.1
+    for i in range(0, precision):
+        while (ans * ans <= number):
+            ans += increment
+ 
+        # loop terminates when ans * ans > number
+        ans = ans - increment
+        increment = increment / 10
+ 
+    return ans
 
 def is_square_prec(apositiveint):
 	x = apositiveint // 2
