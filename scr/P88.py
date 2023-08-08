@@ -79,11 +79,11 @@ def P88(N=20):
 
 		return np.sum(np.unique(ans))
 
-	for n in itertools.product( np.arange(2,12000), repeat=2):
-		if n[0]%1000==1:
-			print(n)
+	#for n in itertools.product( np.arange(2,12000), repeat=2):
+	#	if n[0]%1000==1:
+	#		print(n)
 
-	asdproduct
+	#asdproduct
 	return 	solve(N)
 50213
 # 63048742
