@@ -218,7 +218,27 @@ def factorize_big_list_cuda(N):
 
 	return prime_list
 
-
+def get_all_factorizations(N):
+     factorizations = [[],[],[[2]],[[3]],[[2,2],[4]]]
+     for c in range(5,2*n+1):
+         factors = []
+         for x in range(2,int(math.sqrt(c))+1):
+             if(c%x==0):
+                 a = factorizations[int(c/x)]
+                 for p in a:
+                     possible = True
+                     for z in p:
+                         if z<x:
+                             possible = False
+                             break
+                     if possible:
+                         t = p[:]
+                         t.append(x)
+                         factors.append(sorted(t))
+         factors.append([c])
+         factorizations.append(factors)
+     return factorizations
+     
 def is_prime(N):
 	prime_list = np.zeros(100, dtype=np.int64) 
 	index = 0
@@ -244,18 +264,58 @@ def pascal_triangle(N):
 		line.append(line[k] * (n-k) / (k+1))
 	return line
 
-@timer
-def divisors_sum(N):
-	divisors = np.zeros(N, dtype=np.int64)
-	for n in range(N):
-		factors = factorize_big_number(n)
-		a = set()
-		for m in range(factors.shape[0]):
-			a = a | set(itertools.combinations(factors, m))
+def getDivs_sum(N):
+	'''
+	In this example, the sum_divisors function takes an integer as input and returns 
+	the sum of its divisors. 
+	'''
+	factors = {1}
+	maxP  = int(N**0.5)
+	p,inc = 2,1
+	while p <= maxP:
+		while N%p==0:
+			factors.update([f*p for f in factors])
+			N //= p
+			maxP = int(N**0.5)
+		p,inc = p+inc,2
+	if N>1:
+		factors.update([f*N for f in factors])
+	return sum(factors) 
 
-		divisors[n] = int(np.sum( [ np.prod(n) for n in a ] ))
+@jit('int64(int64)', nopython=True)#, parallel=True) # fastmath=True
+def getDivs_sum_gpu(n):
+	'''
+	In this example, the sum_divisors function takes an integer as input and returns 
+	the sum of its divisors. The numba.jit decorator is used to compile the function,
+	 which can make it run faster. Note that the numba library does not support recursion or closures.
+	'''
+	divisors = [1]
+	for i in range(2, int(n**0.5)+1):
+		if n % i == 0:
+			divisors.append(i)
+			if i != n // i:
+				divisors.append(n // i)
+	return sum(divisors)
 
-	return divisors[n]
+@jit('int64[:](int64[:])', nopython=True)#, parallel=True) # fastmath=True
+def getDivs_sum_list_gpu(nlist):
+	'''
+	In this example, the sum_divisors function takes an list of integers as input and returns 
+	the list of sum of its divisors. 
+	'''
+	div_sum_list = np.zeros_like(nlist)
+
+	for j, n in enumerate(nlist):
+		divisors = [1]
+		for i in range(2, int(n**0.5)+1):
+			if n % i == 0:
+				divisors.append(i)
+				if i != n // i:
+					divisors.append(n // i)
+
+		div_sum_list[j] = sum(divisors) 
+
+	return div_sum_list
 
 def divisorGenerator(n):
     large_divisors = []
@@ -267,6 +327,19 @@ def divisorGenerator(n):
     for divisor in reversed(large_divisors):
         yield divisor
 
+def getDivs(N):
+    factors = {1}
+    maxP  = int(N**0.5)
+    p,inc = 2,1
+    while p <= maxP:
+        while N%p==0:
+            factors.update([f*p for f in factors])
+            N //= p
+            maxP = int(N**0.5)
+        p,inc = p+inc,2
+    if N>1:
+        factors.update([f*N for f in factors])
+    return factors 
 
 def abundant_numbers(N):
 	divisors = np.zeros(N, dtype=np.int64)
@@ -532,4 +605,56 @@ def is_permutation(N1, N2):
 	N2 = [n for n in str(N2)]
 	return all(N1.count(char) == N2.count(char) for char in set(N1) | set(N2))
 
+def anagram(str1:str, str2:str) -> bool:
+	return len(str1)==len(str2) and sorted(str1)==sorted(str2)
 
+@jit('int64(int64)', nopython=True) # , nopython=True, 
+def is_square(apositiveint):
+  x = apositiveint // 2
+  seen = set([x])
+  while x * x != apositiveint:
+    x = (x + (apositiveint // x)) // 2
+    if x in seen: return False
+    seen.add(x)
+  return True
+
+
+def genTriples(k): # primitive pythagorean triangles a,b,c where a<b<c<k
+	def gcd(n, d):
+		while d != 0:
+			t = d
+			d = n%d
+			n = t
+		return n
+
+	n,m = 1,2
+	while m*m+1<k:                  # while c<k (for largest m producing c)
+		if n>=m: n,m = m%2,m+1      # n reached m, advance m, reset n
+		c = m*m+n*n                 # compute c 
+		if c >= k: n=m;continue     # skip remaining n when c >= k
+		if gcd(n,m) == 1:           # trigger on coprimes
+			yield m*m-n*n,2*m*n,c   # return a,b,c triple
+		n += 2                      # advance n, odd with evens
+
+@jit('int64[:,:](int64)', nopython=True) # , nopython=True, 
+def genTriples_gpu(k): # primitive pythagorean triangles a,b,c where a<b<c<k
+	Triples = []
+	def gcd(n, d):
+		while d != 0:
+			t = d
+			d = n%d
+			n = t
+		return n
+
+	n,m = 1,2
+	while m*m+1<k:                  # while c<k (for largest m producing c)
+		if n>=m: n,m = m%2,m+1      # n reached m, advance m, reset n
+		c = m*m+n*n                 # compute c 
+		if c >= k: n=m;continue     # skip remaining n when c >= k
+		if gcd(n,m) == 1:           # trigger on coprimes
+			Triples.append([m*m-n*n,2*m*n,c]) # return a,b,c triple
+		n += 2                      # advance n, odd with evens
+
+	return np.array( Triples )
+
+#print( [n for n in genTriples_gpu(100)] )
