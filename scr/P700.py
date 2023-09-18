@@ -85,6 +85,7 @@ def compute():
         if number < current_eulercoin:
             current_eulercoin = number
             eulercoins.append(number)
+            
         if current_eulercoin == 15806432: #Our switch strategy case
             new_curr_eulercoin = 1
             curr_max = 4503599627370517
