@@ -1,0 +1,72 @@
+# Función para calcular el Algoritmo Extendido de Euclides
+extended_gcd <- function(a, b) {
+  if (a == 0) {
+    return(list(g = b, x = 0, y = 1))
+  } else {
+    temp <- extended_gcd(b %% a, a)
+    return(list(g = temp$g, x = temp$y - (b %/% a) * temp$x, y = temp$x))
+  }
+}
+
+# Función para calcular el inverso modular
+modinv <- function(a, m) {
+  res <- extended_gcd(a, m)
+  if (res$g != 1) {
+    stop("Inverso modular no existe")
+  } else {
+    return((res$x %% m + m) %% m)
+  }
+}
+
+# Función para calcular la exponenciación modular
+powmod <- function(base, exp, mod) {
+  result <- 1
+  while (exp > 0) {
+    if (exp %% 2 == 1) {
+      result <- (result * base) %% mod
+    }
+    base <- (base * base) %% mod
+    exp <- exp %/% 2
+  }
+  return(result)
+}
+
+compute <- function() {
+  a <- 1504170715041707
+  m <- 4503599627370517
+  eulercoins <- c(a)
+  current_eulercoin <- a
+  inv <- powmod(a, m-2, m)
+  n <- 2
+  
+  while(TRUE) {
+    number <- (a * n) %% m
+    if (number < current_eulercoin) {
+      current_eulercoin <- number
+      eulercoins <- c(eulercoins, number)
+    }
+    
+    if (current_eulercoin == 15806432) {
+      new_curr_eulercoin <- 1
+      curr_max <- m
+      
+      while (new_curr_eulercoin != 15806432) {
+        number <- (inv * new_curr_eulercoin) %% m
+        if (number < curr_max) {
+          curr_max <- number
+          eulercoins <- c(eulercoins, new_curr_eulercoin)
+        }
+        new_curr_eulercoin <- new_curr_eulercoin + 1
+      }
+      break
+    }
+    n <- n + 1
+  }
+  
+  return(sum(eulercoins))
+}
+
+# Llamar a la función y mostrar el resultado
+result <- compute()
+print(result)
+.
