@@ -1,0 +1,54 @@
+const MOD: i64 = 1000000;
+
+// Función para calcular potencia con módulo
+fn pow_mod(base: i64, mut exponent: i64, mod_val: i64) -> i64 {
+    let mut result = 1;
+    let mut base_mod = base % mod_val;
+
+    while exponent > 0 {
+        if exponent % 2 == 1 {
+            result = (result * base_mod) % mod_val;
+        }
+        base_mod = (base_mod * base_mod) % mod_val;
+        exponent /= 2;
+    }
+
+    result % mod_val
+}
+
+// Función principal para calcular el valor deseado
+fn p710() -> i32 {
+    let mut pal_odd = 0;
+    let mut pal_odd_0b2 = 2;
+    let mut pal_odd_0b4 = 1;
+    let mut two_pal_odd = 0;
+    let mut two_pal_odd_0b2 = 1;
+    let mut two_pal_odd_0b4 = 0;
+    let mut two_pal = 0;
+    let mut suma_odd = 0;
+    let mut suma_even = 0;
+    let mut n = 2;
+
+    while two_pal % MOD != 0 || n < 42 {
+        n += 2;
+        pal_odd = pow_mod(2, n / 2 - 1, MOD);
+        two_pal_odd = (suma_odd - two_pal_odd_0b4 + pal_odd_0b4) % MOD;
+        two_pal = (two_pal_odd + suma_even - two_pal_odd_0b2 + pal_odd_0b2) % MOD;
+
+        suma_odd += two_pal_odd;
+        suma_even += two_pal_odd;
+
+        pal_odd_0b4 = pal_odd_0b2;
+        pal_odd_0b2 = pal_odd;
+        two_pal_odd_0b4 = two_pal_odd_0b2;
+        two_pal_odd_0b2 = two_pal_odd;
+    }
+
+    n
+}
+
+fn main() {
+    // Ejecuta la función y muestra el resultado
+    let result = p710();
+    println!("Result of P710: {}", result);
+}
