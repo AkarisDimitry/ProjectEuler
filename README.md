@@ -1,5 +1,7 @@
 # Project Euler Solutions
 
+![image](https://github.com/AkarisDimitry/ProjectEuler/assets/34775621/70a7ff1d-46be-46fd-a85c-ecb1e562f8ef)
+
 This repository contains algorithmic solutions to challenges from Project Euler. Each problem is tackled with a combination of mathematical insight and computational optimization. Below is a brief overview of the topics and themes for each problem:
 
 ## Table of Contents
